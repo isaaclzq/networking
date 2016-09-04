@@ -22,19 +22,24 @@ class Client(object):
     def run(self):
         self.client.connect((self.addr, self.port))
         self.client.sendall(pad_message(self.name))
+        sys.stdout.write("[Me] ")
+        sys.stdout.flush()
 
         while True:
             socketList = [sys.stdin, self.client]
             readList, writeList, errorList = select.select(socketList, [], [], 0)
-            
             for sock in readList:
                 if sock == self.client:
                     message = sock.recv(MESSAGE_LENGTH)
                     if message:
                         sys.stdout.write(message)
+                        sys.stdout.write("[Me] ")
+                        sys.stdout.flush()
                 else:
                     msg = sys.stdin.readline()
                     self.client.sendall(msg)
+                    sys.stdout.write("[Me] ")
+                    sys.stdout.flush()
 
 
     def sendMessage(self, message):

@@ -116,6 +116,7 @@ class Server(object):
             members = channel.getMembers()
             for socket in members:
                 if socket != self.server and socket != sock:
+                    message = "[" + str(self.chatter[sock][0]) + "]" + " " + message
                     socket.sendall(message)
 
 if __name__ == "__main__":
