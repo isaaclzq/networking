@@ -107,6 +107,7 @@ class Server(object):
             channel = self.channels[name]
         except:
             note = SERVER_NO_CHANNEL_EXISTS.format(name)
+            #print self.chatter[sock][0]
             sock.sendall(note)
             return 
         oldChannel = self.chatter[sock][1]
@@ -114,13 +115,13 @@ class Server(object):
             oldChannel.removeMember(sock)
         channel.addMember(sock)
         self.chatter[sock][1] = channel
-        note = SERVER_CLIENT_JOINED_CHANNEL.format(name)
+        note = SERVER_CLIENT_JOINED_CHANNEL.format(self.chatter[sock][0])
         for member in channel.getMembers():
             if member != sock:
                 member.sendall(note)
-        print("socket name: {0}, channel name: {1}".format(self.chatter[sock][0],
-                                                        self.chatter[sock][1].getName()))
-        print("channel mamebers: " + str(self.chatter[sock][1].getMembers()))
+        #print("socket name: {0}, channel name: {1}".format(self.chatter[sock][0],
+        #                                                self.chatter[sock][1].getName()))
+        #print("channel mamebers: " + str(self.chatter[sock][1].getMembers()))
 
 
     def createChannel(self, sock, name):
@@ -134,16 +135,15 @@ class Server(object):
             oldChannel.removeMember(sock)
         channel.addMember(sock)
         self.chatter[sock][1] = channel
-
-        print("socket name: {0}, channel name: {1}".format(self.chatter[sock][0],
-                                                           self.chatter[sock][1].getName()))
+        #print("socket name: {0}, channel name: {1}".format(self.chatter[sock][0],
+        #                                                   self.chatter[sock][1].getName()))
 
     def messageHandler(self, sock, message):
         # first update chatter's name
         if self.chatter[sock][0] == None:
             message = message.rstrip(" ")
             self.chatter[sock][0] = message
-            print (self.chatter[sock])
+            #print (self.chatter[sock])
         elif self.chatter[sock][1] == None:
             note = SERVER_CLIENT_NOT_IN_CHANNEL
             sock.sendall(note)

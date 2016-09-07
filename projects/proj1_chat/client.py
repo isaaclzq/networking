@@ -14,7 +14,7 @@ class Client(object):
 
     def __init__(self, name, addr, port):
         self.addr = addr
-        self.port = port
+        self.port = int(port)
         self.name = name
         self.client = socket.socket()
 
@@ -61,11 +61,9 @@ if __name__ == "__main__":
 
     name = sys.argv[1]
     addr = sys.argv[2]
-    port = int(sys.argv[3])
+    port = sys.argv[3]
     
     cli = Client(name, addr, port)
     cli.run()
-    #message = sys.stdin.readline()
-    #cli.sendMessage(message)
     
 
