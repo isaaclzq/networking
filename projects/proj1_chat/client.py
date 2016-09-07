@@ -1,8 +1,7 @@
 import socket
 import sys 
 import select
-
-MESSAGE_LENGTH = 200
+from utils import *
 
 def pad_message(message):
     while len(message) < MESSAGE_LENGTH:
@@ -20,21 +19,31 @@ class Client(object):
         self.client = socket.socket()
 
     def run(self):
-        self.client.connect((self.addr, self.port))
+        try:
+            self.client.connect((self.addr, self.port))
+        except:
+            print (CLIENT_CANNOT_CONNECT.format(self.addr, self.port))
+            self.client.close()
+            sys.exit()
         self.client.sendall(pad_message(self.name))
         sys.stdout.write("[Me] ")
         sys.stdout.flush()
+        socketList = [sys.stdin, self.client]
 
         while True:
-            socketList = [sys.stdin, self.client]
             readList, writeList, errorList = select.select(socketList, [], [], 0)
             for sock in readList:
                 if sock == self.client:
                     message = sock.recv(MESSAGE_LENGTH)
                     if message:
-                        sys.stdout.write(message)
+                        sys.stdout.write(CLIENT_WIPE_ME + '\r' + message.rstrip(" ")+'\n')
+                        sys.stdout.flush()
                         sys.stdout.write("[Me] ")
                         sys.stdout.flush()
+                    else:
+                        print (CLIENT_WIPE_ME + '\r' + CLIENT_SERVER_DISCONNECTED.format(self.addr, self.port))
+                        self.client.close()
+                        sys.exit()
                 else:
                     msg = sys.stdin.readline()
                     self.client.sendall(msg)

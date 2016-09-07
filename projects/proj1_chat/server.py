@@ -1,8 +1,12 @@
 import socket
 import select
 import sys
+from utils import *
 
-MESSAGE_LENGTH = 200
+def pad_message(message):
+    while len(message) < MESSAGE_LENGTH:
+        message += " "
+    return message[:MESSAGE_LENGTH]
 
 class Channel(object):
     def __init__(self, name):
@@ -49,11 +53,19 @@ class Server(object):
                     message = sock.recv(MESSAGE_LENGTH)
                     if message:
                         if self.__isCommand(message):
-                            self.commandHandler(sock, message)
+                            note = self.commandHandler(sock, message)
+                            if note:
+                                sock.sendall(pad_message(note))
                         else:
                             self.messageHandler(sock, message)
                     else:
-                        pass
+                        if sock in self.socketList:
+                            message = SERVER_CLIENT_LEFT_CHANNEL.format(self.chatter[sock][0])
+                            self.messageHandler(sock, message)
+                            channel = self.chatter[sock][1]
+                            channel.removeMember(sock)
+                            self.socketList.remove(sock)
+
     
     def __isCommand(self, message):
         message = message.lstrip(" ")
@@ -63,31 +75,52 @@ class Server(object):
     def commandHandler(self, sock, message):
         message = message.strip(" ").split()
         if message[0] == "/join":
-            self.joinChannel(sock, message[1])
+            if len(message) < 2:
+                note = SERVER_JOIN_REQUIRES_ARGUMENT
+                sock.sendall(note)
+            else:
+                self.joinChannel(sock, message[1])
         elif message[0] == "/create":
-            self.createChannel(sock, message[1])
+            if len(message) < 2:
+                note = SERVER_CREATE_REQUIRES_ARGUMENT
+                sock.sendall(note)
+            else:
+                if message[1] in self.channels:
+                    note = SERVER_CHANNEL_EXISTS.format(message[1])
+                    sock.sendall(note)
+                else:
+                    self.createChannel(sock, message[1])
         elif message[0] == "/list":
-            self.listChannel()
+            self.listChannel(sock)
         else:
-            print("No Such Command")
+            return SERVER_INVALID_CONTROL_MESSAGE.format(message)
 
-    def listChannel(self):
+    def listChannel(self, sock):
+        output = ""
         for key in self.channels:
-            print(self.channels[key].getName())
+            output += self.channels[key].getName() + '\n'
+        sock.sendall(output[:-1])
+
     
     def joinChannel(self, sock, name):
-        channel = self.channels[name]
-        if not channel:
-            print("channel does not exist")
-        else:
-            oldChannel = self.chatter[sock][1]
-            if oldChannel:
-                oldChannel.removeMember(sock)
-            channel.addMember(sock)
-            self.chatter[sock][1] = channel
-            print("socket name: {0}, channel name: {1}".format(self.chatter[sock][0],
+        try:
+            channel = self.channels[name]
+        except:
+            note = SERVER_NO_CHANNEL_EXISTS.format(name)
+            sock.sendall(note)
+            return 
+        oldChannel = self.chatter[sock][1]
+        if oldChannel:
+            oldChannel.removeMember(sock)
+        channel.addMember(sock)
+        self.chatter[sock][1] = channel
+        note = SERVER_CLIENT_JOINED_CHANNEL.format(name)
+        for member in channel.getMembers():
+            if member != sock:
+                member.sendall(note)
+        print("socket name: {0}, channel name: {1}".format(self.chatter[sock][0],
                                                         self.chatter[sock][1].getName()))
-            print("channel mamebers: " + str(self.chatter[sock][1].getMembers()))
+        print("channel mamebers: " + str(self.chatter[sock][1].getMembers()))
 
 
     def createChannel(self, sock, name):
@@ -111,6 +144,9 @@ class Server(object):
             message = message.rstrip(" ")
             self.chatter[sock][0] = message
             print (self.chatter[sock])
+        elif self.chatter[sock][1] == None:
+            note = SERVER_CLIENT_NOT_IN_CHANNEL
+            sock.sendall(note)
         else:
             channel = self.chatter[sock][1]
             members = channel.getMembers()
