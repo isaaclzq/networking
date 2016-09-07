@@ -8,7 +8,25 @@ def pad_message(message):
         message += " "
     return message[:MESSAGE_LENGTH]
 
+class BufferPool(object):
+    
+    def __init__(self):
+        self.sendQ = ""
+        self.recvB = ""
+        self.hasSent = 0
+        self.hasRecv = 0
 
+    def getSendQLen(self):
+        return len(self.sendQ)
+    
+    def getRecvBLen(self):
+        return len(self.recvB)
+
+    def sendM(self, message):
+        self.sendQ += pad_message(message)
+
+    def recvM(self, message):
+        self.recvB += message
 
 class Client(object):
 
@@ -17,6 +35,8 @@ class Client(object):
         self.port = int(port)
         self.name = name
         self.client = socket.socket()
+        self.buffer = {} # sock : bufferPool
+        self.incompleted = [] # incompleted socket
 
     def run(self):
         try:
@@ -25,10 +45,12 @@ class Client(object):
             print (CLIENT_CANNOT_CONNECT.format(self.addr, self.port))
             self.client.close()
             sys.exit()
-        self.client.sendall(pad_message(self.name))
+        sendMessage(self.name)
         sys.stdout.write("[Me] ")
         sys.stdout.flush()
         socketList = [sys.stdin, self.client]
+        self.buffer[sys.stdin] = BufferPool()
+        self.buffer[self.client] = BufferPool()
 
         while True:
             readList, writeList, errorList = select.select(socketList, [], [], 0)
@@ -46,13 +68,29 @@ class Client(object):
                         sys.exit()
                 else:
                     msg = sys.stdin.readline()
-                    self.client.sendall(msg)
+                    sendMessage(msg)
                     sys.stdout.write("[Me] ")
                     sys.stdout.flush()
 
 
-    def sendMessage(self, message):
-        self.client.sendall(message)
+    def sendMessage(self, sock, message):
+        # if message is None, then continue incompleted work
+        # if message is presented, append the message to sock's sendQ
+
+        buf = self.bufferPool[sock]
+        if message == None:
+            byte = sock.send(MESSAGE_LENGTH - buf.hasSent)
+            buf.hasSent += byte
+            if buf.hasSent == MESSAGE_LENGTH:
+            # has sent a complete message, update followings
+                pass 
+        else:
+            buf.sendM(message)
+            if not sock in self.incompleted:
+                self.incompleted.append(sock)
+
+    def RecvMessage(self, sock, message):
+        pass
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:

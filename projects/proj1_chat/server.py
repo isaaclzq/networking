@@ -67,6 +67,12 @@ class Server(object):
                             self.socketList.remove(sock)
 
     
+    def recvMsg(self, sock):
+        cache = ""
+        while len(output) < MESSAGE_LENGTH:
+            
+
+
     def __isCommand(self, message):
         message = message.lstrip(" ")
         return message[0] == '/'
