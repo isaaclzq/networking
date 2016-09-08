@@ -103,7 +103,8 @@ class Server(object):
                             message = SERVER_CLIENT_LEFT_CHANNEL.format(self.chatter[sock][0])
                             self.messageHandler(sock, message)
                             channel = self.chatter[sock][1]
-                            channel.removeMember(sock)
+                            if channel != None:
+                                channel.removeMember(sock)
                             self.socketList.remove(sock)
                             if sock in self.recvBuffer:
                                 self.recvBuffer.remove(sock)
@@ -133,7 +134,6 @@ class Server(object):
         buf = self.buffer[sock]
 
         message = sock.recv(MESSAGE_LENGTH - buf.hasRecv)
-        print "the message is " + message + str(len(message))
         if not message:
             return message
         else:
@@ -273,6 +273,10 @@ class Server(object):
             for socket in members:
                 if self.server and socket != sock:
                     tmp = "[" + str(self.chatter[sock][0]) + "]" + " " + message
+                    print len(tmp)
+                    print "======================"
+                    print tmp
+                    print "======================"
                     self.sendMessage(socket, pad_message(tmp))
 
 if __name__ == "__main__":
