@@ -61,7 +61,7 @@ class Client(object):
         self.buffer[sys.stdin] = BufferPool()
         self.buffer[self.client] = BufferPool()
         self.sendMessage(self.client, self.name)
-        sys.stdout.write("[Me] ")
+        sys.stdout.write(CLIENT_MESSAGE_PREFIX)
         sys.stdout.flush()
         socketList = [sys.stdin, self.client]
         
@@ -77,7 +77,7 @@ class Client(object):
                         else:
                             sys.stdout.write(CLIENT_WIPE_ME + '\r' + message.rstrip(" ")+"\n")
                             sys.stdout.flush()
-                            sys.stdout.write("[Me] ")
+                            sys.stdout.write(CLIENT_MESSAGE_PREFIX)
                             sys.stdout.flush()
                     else:
                         print (CLIENT_WIPE_ME + '\r' + CLIENT_SERVER_DISCONNECTED.format(self.addr, self.port))

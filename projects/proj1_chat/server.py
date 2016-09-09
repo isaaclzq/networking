@@ -91,12 +91,10 @@ class Server(object):
                         if message == -10:
                             pass
                         elif self.__isCommand(message):
-                            print "1"
                             note = self.commandHandler(sock, message)
                             if note:
                                 self.sendMessage(sock, pad_message(note))
                         else:
-                            print "2"
                             self.messageHandler(sock, message)
                     else:
                         if sock in self.socketList:
@@ -110,17 +108,14 @@ class Server(object):
                                 self.recvBuffer.remove(sock)
 
             for sock in self.recvBuffer:
-                print "hello"
                 message = self.recvMessage(sock)
                 if message == -10:
                     pass
                 elif self.__isCommand(message):
-                    print "1"
                     note = self.commandHandler(sock, message)
                     if note:
                         self.sendMessage(sock, pad_message(note))
                 else:
-                    print "2"
                     self.messageHandler(sock, message)
 
 
@@ -205,7 +200,6 @@ class Server(object):
                 else:
                     self.createChannel(sock, message[1])
         elif message[0] == "/list":
-            print "error"
             self.listChannel(sock)
         else:
             return SERVER_INVALID_CONTROL_MESSAGE.format(message)
@@ -223,7 +217,6 @@ class Server(object):
             channel = self.channels[name]
         except:
             note = SERVER_NO_CHANNEL_EXISTS.format(name)
-            #print self.chatter[sock][0]
             self.sendMessage(sock, pad_message(note))
             return 
         oldChannel = self.chatter[sock][1]
@@ -263,7 +256,6 @@ class Server(object):
         if self.chatter[sock][0] == None:
             message = message.rstrip(" ")
             self.chatter[sock][0] = message
-            #print (self.chatter[sock])
         elif self.chatter[sock][1] == None:
             note = SERVER_CLIENT_NOT_IN_CHANNEL
             self.sendMessage(sock, pad_message(note))
@@ -273,10 +265,6 @@ class Server(object):
             for socket in members:
                 if self.server and socket != sock:
                     tmp = "[" + str(self.chatter[sock][0]) + "]" + " " + message
-                    print len(tmp)
-                    print "======================"
-                    print tmp
-                    print "======================"
                     self.sendMessage(socket, pad_message(tmp))
 
 if __name__ == "__main__":
